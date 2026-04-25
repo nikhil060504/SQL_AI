@@ -58,13 +58,15 @@ def ask_database(user_question):
         # The agent acts as the 'brain'. It has tools to inspect table schemas, 
         # write SQL, run it, and interpret the result.
         # Node.js Equivalent: This is LangChain's pre-built agent executor for SQL.
-        # We set return_intermediate_steps=True so we can show the generated SQL to the user.
+        # We use a zero-shot-react agent because some third-party models or proxies
+        # do not fully support native OpenAI tool-calling. This is universally compatible.
         agent_executor = create_sql_agent(
             llm=llm,
             db=db,
-            agent_type="tool-calling", # Modern approach using general tool-calling capabilities
+            agent_type="zero-shot-react-description", # Generic text-based tool execution
             verbose=True, # Helpful for debugging, it prints the agent's thought process
-            return_intermediate_steps=True
+            return_intermediate_steps=True,
+            handle_parsing_errors=True # Crucial for non-standard models
         )
 
         # 4. Run the Agent
