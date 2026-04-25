@@ -1,6 +1,6 @@
 streamlit
 langchain
-langchain-openai
+langchain-groq
 langchain-community
 python-dotenv
 sqlalchemy

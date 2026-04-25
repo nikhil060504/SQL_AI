@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langchain_community.agent_toolkits import create_sql_agent
 from sqlalchemy import create_engine
 
@@ -9,10 +9,9 @@ from sqlalchemy import create_engine
 # Node.js Equivalent: require('dotenv').config();
 load_dotenv()
 
-# We expect an OPENAI_API_KEY in the environment. Let's make sure it's there.
-# If using Google GenAI instead, you would check for GOOGLE_API_KEY.
-if not os.getenv("OPENAI_API_KEY"):
-    print("WARNING: OPENAI_API_KEY is missing from the environment. Please add it to your .env file.")
+# We expect a GROQ_API_KEY in the environment. Let's make sure it's there.
+if not os.getenv("GROQ_API_KEY"):
+    print("WARNING: GROQ_API_KEY is missing from the environment. Please add it to your .env file.")
 
 # Define the connection string for SQLite
 # Node.js Equivalent: This is the connection URL string.
@@ -29,10 +28,10 @@ def ask_database(user_question):
         db = SQLDatabase.from_uri(db_uri)
 
         # 2. Initialize the LLM (Large Language Model)
-        # We use GPT-4o-mini here as it's fast and very capable of writing SQL.
-        # Node.js Equivalent: const llm = new ChatOpenAI({ modelName: "gpt-4o-mini", temperature: 0 });
+        # We use Groq's Llama 3 here as it's lightning fast and open source.
+        # Node.js Equivalent: const llm = new ChatGroq({ model: "llama3-70b-8192", temperature: 0 });
         # temperature=0 ensures the model is deterministic and analytical, rather than creative.
-        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        llm = ChatGroq(model="llama3-70b-8192", temperature=0)
 
         # 3. Create the SQL Agent
         # The agent acts as the 'brain'. It has tools to inspect table schemas, 
@@ -42,7 +41,7 @@ def ask_database(user_question):
         agent_executor = create_sql_agent(
             llm=llm,
             db=db,
-            agent_type="openai-tools", # Modern approach using OpenAI's tool-calling capabilities
+            agent_type="tool-calling", # Modern approach using general tool-calling capabilities
             verbose=True, # Helpful for debugging, it prints the agent's thought process
             return_intermediate_steps=True
         )
