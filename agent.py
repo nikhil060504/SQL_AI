@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
-from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI
 from langchain_community.agent_toolkits import create_sql_agent
 from sqlalchemy import create_engine
 
@@ -9,9 +9,11 @@ from sqlalchemy import create_engine
 # Node.js Equivalent: require('dotenv').config();
 load_dotenv()
 
-# We expect a GROQ_API_KEY in the environment. Let's make sure it's there.
-if not os.getenv("GROQ_API_KEY"):
-    print("WARNING: GROQ_API_KEY is missing from the environment. Please add it to your .env file.")
+# We expect an API key. 
+# You can use OPENAI_API_KEY, or XAI_API_KEY if you are using xAI (Grok).
+api_key = os.getenv("API_KEY") or os.getenv("XAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+if not api_key:
+    print("WARNING: API Key is missing from the environment. Please add API_KEY to your .env file.")
 
 # Define the connection string for SQLite
 # Node.js Equivalent: This is the connection URL string.
@@ -28,10 +30,17 @@ def ask_database(user_question):
         db = SQLDatabase.from_uri(db_uri)
 
         # 2. Initialize the LLM (Large Language Model)
-        # We use Groq's Llama 3 here as it's lightning fast and open source.
-        # Node.js Equivalent: const llm = new ChatGroq({ model: "llama3-70b-8192", temperature: 0 });
-        # temperature=0 ensures the model is deterministic and analytical, rather than creative.
-        llm = ChatGroq(model="llama3-70b-8192", temperature=0)
+        # We are using an OpenAI-compatible client. If you are using xAI (Grok), 
+        # make sure to set the BASE_URL to https://api.xai.com/v1 if needed.
+        # Note: 'grok-4.20-reasoning' is a custom model name you provided.
+        base_url = os.getenv("BASE_URL") # E.g., https://api.xai.com/v1
+        
+        llm = ChatOpenAI(
+            api_key=api_key,
+            base_url=base_url if base_url else None,
+            model="grok-4.20-reasoning", 
+            temperature=0
+        )
 
         # 3. Create the SQL Agent
         # The agent acts as the 'brain'. It has tools to inspect table schemas, 
