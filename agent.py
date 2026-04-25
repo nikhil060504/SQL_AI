@@ -54,6 +54,33 @@ def ask_database(user_question):
             temperature=0
         )
 
+        # --- DIAGNOSTIC CHECK ---
+        # We ping the API directly using 'requests' to see exactly what the proxy is returning.
+        # This will bypass Langchain and catch any weird proxy behaviors.
+        import requests
+        debug_url = base_url if base_url else "https://api.openai.com/v1"
+        debug_url = debug_url.rstrip("/") + "/chat/completions"
+        debug_headers = {
+            "Authorization": f"Bearer {os.environ.get('OPENAI_API_KEY')}",
+            "Content-Type": "application/json"
+        }
+        debug_payload = {
+            "model": "grok-4.20-reasoning",
+            "messages": [{"role": "user", "content": "Hello"}]
+        }
+        
+        try:
+            debug_resp = requests.post(debug_url, headers=debug_headers, json=debug_payload, timeout=10)
+            debug_json = debug_resp.json()
+            if debug_resp.status_code != 200 or not debug_json.get("choices"):
+                return {
+                    "answer": f"⚠️ **API Provider Issue Detected:**\nThe API provider returned an invalid response. This is NOT a code issue. See raw details below.",
+                    "sql_query": f"HTTP Status: {debug_resp.status_code}\nRaw API Response:\n{debug_resp.text}"
+                }
+        except Exception as debug_e:
+            return f"⚠️ **Network Request Failed:** Could not reach the API. Error: {str(debug_e)}"
+        # --- END DIAGNOSTIC CHECK ---
+
         # 3. Create the SQL Agent
         # The agent acts as the 'brain'. It has tools to inspect table schemas, 
         # write SQL, run it, and interpret the result.
