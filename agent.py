@@ -20,7 +20,11 @@ if not api_key:
     except Exception:
         pass
 
-if not api_key:
+if api_key:
+    # Force set it in the environment so LangChain/OpenAI picks it up natively
+    # This prevents the "Sync client is not available" bug.
+    os.environ["OPENAI_API_KEY"] = str(api_key).strip()
+else:
     print("WARNING: API Key is missing. Please add OPENAI_API_KEY to your .env file or Streamlit Secrets.")
 
 # Define the connection string for SQLite
@@ -43,8 +47,8 @@ def ask_database(user_question):
         # Note: 'grok-4.20-reasoning' is a custom model name you provided.
         base_url = os.getenv("BASE_URL") # E.g., https://api.xai.com/v1
         
+        # We let ChatOpenAI pull the API key directly from os.environ["OPENAI_API_KEY"]
         llm = ChatOpenAI(
-            api_key=api_key,
             base_url=base_url if base_url else None,
             model="grok-4.20-reasoning", 
             temperature=0
