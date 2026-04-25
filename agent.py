@@ -9,11 +9,19 @@ from sqlalchemy import create_engine
 # Node.js Equivalent: require('dotenv').config();
 load_dotenv()
 
-# We expect an API key. 
-# You can use OPENAI_API_KEY, or XAI_API_KEY if you are using xAI (Grok).
+# Try to get the API key from environment variables or Streamlit secrets
 api_key = os.getenv("API_KEY") or os.getenv("XAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+
 if not api_key:
-    print("WARNING: API Key is missing from the environment. Please add API_KEY to your .env file.")
+    try:
+        import streamlit as st
+        # Fallback to Streamlit Secrets
+        api_key = st.secrets.get("OPENAI_API_KEY") or st.secrets.get("API_KEY") or st.secrets.get("XAI_API_KEY")
+    except Exception:
+        pass
+
+if not api_key:
+    print("WARNING: API Key is missing. Please add OPENAI_API_KEY to your .env file or Streamlit Secrets.")
 
 # Define the connection string for SQLite
 # Node.js Equivalent: This is the connection URL string.
